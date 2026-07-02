@@ -24,7 +24,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "site" / "figurki"
-TRIPOSR_DIR = Path(os.environ["TRIPOSR_DIR"])
+TRIPOSR_DIR = Path(os.environ["TRIPOSR_DIR"]) if "TRIPOSR_DIR" in os.environ else None
 
 TARGET_HEIGHT_MM = 90.0  # PRD: figurka ~85-95 mm
 
@@ -37,8 +37,66 @@ TITLES = {
 }
 
 
+def generate_mesh_tripo(viz_png: Path, workdir: Path) -> Path:
+    """Generuje siatkę przez Tripo API (image-to-model), zwraca ścieżkę GLB.
+
+    Wymaga TRIPO_API_KEY w środowisku i kredytów API na koncie.
+    """
+    import time
+
+    import requests
+
+    key = os.environ["TRIPO_API_KEY"]
+    headers = {"Authorization": f"Bearer {key}"}
+    api = "https://api.tripo3d.ai/v2/openapi"
+
+    with open(viz_png, "rb") as fh:
+        up = requests.post(f"{api}/upload/sts", headers=headers,
+                           files={"file": (viz_png.name, fh, "image/png")}, timeout=120)
+    up.raise_for_status()
+    token = up.json()["data"]["image_token"]
+
+    task = requests.post(f"{api}/task", headers=headers, timeout=60, json={
+        "type": "image_to_model",
+        "file": {"type": "png", "file_token": token},
+        "texture": False,   # do druku potrzebna tylko geometria
+        "pbr": False,
+    })
+    task.raise_for_status()
+    body = task.json()
+    if body.get("code") != 0:
+        raise RuntimeError(f"Tripo: {body.get('message')} ({body.get('suggestion', '')})")
+    task_id = body["data"]["task_id"]
+
+    while True:
+        time.sleep(6)
+        st = requests.get(f"{api}/task/{task_id}", headers=headers, timeout=60).json()["data"]
+        status = st["status"]
+        print(f"  tripo: {status} {st.get('progress', '')}%", flush=True)
+        if status == "success":
+            url = st["output"].get("model") or st["output"].get("base_model")
+            break
+        if status in ("failed", "banned", "expired", "cancelled"):
+            raise RuntimeError(f"Tripo task {status}")
+
+    out = workdir / "model.glb"
+    data = requests.get(url, timeout=300)
+    data.raise_for_status()
+    out.write_bytes(data.content)
+    return out
+
+
 def generate_mesh(viz_png: Path, workdir: Path) -> Path:
+    """Silnik wybiera env FIGURKI_ENGINE: 'tripo' (API) albo TripoSR (domyślnie)."""
+    if os.environ.get("FIGURKI_ENGINE") == "tripo":
+        return generate_mesh_tripo(viz_png, workdir)
+    return generate_mesh_triposr(viz_png, workdir)
+
+
+def generate_mesh_triposr(viz_png: Path, workdir: Path) -> Path:
     """Odpala TripoSR na wizualizacji, zwraca ścieżkę mesh.obj."""
+    if TRIPOSR_DIR is None:
+        raise RuntimeError("Ustaw TRIPOSR_DIR (klon repo TripoSR) albo FIGURKI_ENGINE=tripo")
     cmd = [
         sys.executable, str(TRIPOSR_DIR / "run.py"), str(viz_png),
         "--output-dir", str(workdir),
@@ -67,13 +125,39 @@ def _repair_watertight(mesh):
     return mesh  # nie udało się — manifest pokaże watertight: false
 
 
-def to_print_scale(mesh):
-    """Skaluje figurkę do TARGET_HEIGHT_MM, stawia na z=0 i domyka podstawę.
+def _rotate_up_to_z(mesh):
+    """Wykrywa oś pionu i obraca bryłę do z-up.
 
-    TripoSR zwraca modele już w z-up (podstawka przy z-min, przód w +y) —
-    sprawdzone empirycznie na wygenerowanych siatkach.
+    Figurka stoi na płaskiej podstawce, więc "dół" to ta ściana bboxa,
+    przy której siedzi wyraźnie najwięcej wierzchołków. TripoSR daje z-up,
+    Tripo (glTF) y-up — heurystyka obsługuje oba bez zgadywania.
     """
+    import trimesh
+
+    v = mesh.vertices
+    lo, hi = mesh.bounds
+    ext = hi - lo
+    best_axis, best_sign, best_count = 2, 1, -1
+    for axis in range(3):
+        margin = 0.02 * ext[axis]
+        at_min = int((v[:, axis] < lo[axis] + margin).sum())
+        at_max = int((v[:, axis] > hi[axis] - margin).sum())
+        if at_min > best_count:
+            best_axis, best_sign, best_count = axis, 1, at_min   # dół przy min
+        if at_max > best_count:
+            best_axis, best_sign, best_count = axis, -1, at_max  # dół przy max
+    up = np.zeros(3)
+    up[best_axis] = best_sign  # wektor od podstawki w górę bryły
+    if not np.allclose(up, [0, 0, 1]):
+        rot = trimesh.geometry.align_vectors(up, [0, 0, 1])
+        mesh.apply_transform(rot)
+    return mesh
+
+
+def to_print_scale(mesh):
+    """Obraca do z-up, skaluje do TARGET_HEIGHT_MM, stawia na z=0, domyka siatkę."""
     mesh.merge_vertices()
+    mesh = _rotate_up_to_z(mesh)
     mesh.fill_holes()  # marching cubes zostawia otwartą podstawę na granicy siatki
     if not mesh.is_watertight:
         mesh = _repair_watertight(mesh)
