@@ -26,7 +26,7 @@ jobs:
       - uses: actions/configure-pages@v5
       # STL-e figurek (~80 MB) blokowały kolejkę deploymentu Pages;
       # strona linkuje je z raw.githubusercontent.com
-      - run: rm -f site/figurki/*.stl
+      - run: rm -f site/figurki/*.stl site/przyklady/*.stl
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
