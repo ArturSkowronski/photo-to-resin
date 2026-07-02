@@ -54,6 +54,24 @@ params = LithophaneParams(width_mm=80, min_thickness_mm=0.6, max_thickness_mm=2.
 photo_to_stl("zdjecie.jpg", "litofan.stl", params)
 ```
 
+## Pipeline figurkowy (demo DziadkoDruk)
+
+Pełne przejście "zdjęcie → figurka do druku" w dwóch skryptach:
+
+```bash
+# etap 1-2: syntetyczne zdjęcie demo + stylizowana wizualizacja figurki
+# (gpt-image-1; wymaga OPENAI_API_KEY)
+.venv/bin/python scripts/figurki_pipeline.py
+
+# etap 3-4: geometria 3D (TripoSR, image-to-3D), STL ~90 mm i rendery
+TRIPOSR_DIR=<klon TripoSR> TRIPOSR_DEVICE=mps python scripts/figurki_3d.py
+```
+
+Wyniki trafiają do `site/figurki/` i zasilają sekcję "Figurki" na stronie.
+Demo nie używa prawdziwych zdjęć — wejścia też są generowane. TripoSR to
+bezkluczowa lokalna alternatywa; produkcyjnie PRD zakłada model SoTA
+(Hunyuan3D / Rodin / Tripo API).
+
 ## Galeria przykładów
 
 Pięć scen przechodzi cały pipeline end-to-end (zdjęcie → notebook → STL →

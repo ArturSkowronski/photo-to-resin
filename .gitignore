@@ -3,6 +3,7 @@ __pycache__/
 *.egg-info/
 *.stl
 !site/przyklady/*.stl
+!site/figurki/*.stl
 .ipynb_checkpoints/
 .playwright-mcp/
 site-*.png

@@ -1,0 +1,62 @@
+[
+  {
+    "slug": "mala-czarodziejka",
+    "title": "Mała czarodziejka",
+    "size_mm": [
+      44.9,
+      63.9,
+      90.0
+    ],
+    "triangles": 104352,
+    "watertight": true,
+    "stl_mb": 5.22
+  },
+  {
+    "slug": "rycerz-z-kartonu",
+    "title": "Rycerz z kartonu",
+    "size_mm": [
+      39.6,
+      51.2,
+      90.0
+    ],
+    "triangles": 78140,
+    "watertight": true,
+    "stl_mb": 3.91
+  },
+  {
+    "slug": "baletnica",
+    "title": "Baletnica",
+    "size_mm": [
+      51.3,
+      64.1,
+      90.0
+    ],
+    "triangles": 104796,
+    "watertight": true,
+    "stl_mb": 5.24
+  },
+  {
+    "slug": "pies-superbohater",
+    "title": "Pies superbohater",
+    "size_mm": [
+      79.9,
+      65.6,
+      90.0
+    ],
+    "triangles": 108914,
+    "watertight": true,
+    "stl_mb": 5.45
+  },
+  {
+    "slug": "maly-astronauta",
+    "title": "Mały astronauta",
+    "size_mm": [
+      41.0,
+      89.7,
+      90.0
+    ],
+    "triangles": 104066,
+    "watertight": true,
+    "stl_mb": 5.2
+  }
+]

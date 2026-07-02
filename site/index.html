@@ -181,6 +181,31 @@ section h2 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 700; margin-botto
   font-size: 14.5px; font-weight: 500;
 }
 
+/* pipeline figurkowy — każdy wiersz to pełne przejście zdjęcie -> STL */
+.przeplyw {
+  border: 1px solid var(--linia); border-radius: 8px; background: var(--noc-2);
+  padding: 20px; margin-bottom: 24px;
+}
+.etapy { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.etapy figure { margin: 0; }
+.etapy img {
+  display: block; width: 100%; aspect-ratio: 1; object-fit: contain;
+  border-radius: 6px; background: #2a2219;
+}
+.etapy figcaption {
+  font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--popiol);
+  margin-top: 8px;
+}
+.etapy figcaption b { color: var(--zar); font-weight: 400; }
+.przeplyw-info {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 16px; flex-wrap: wrap; margin-top: 16px;
+}
+.przeplyw-info h3 { font-size: 19px; font-weight: 700; }
+.przeplyw-info .meta {
+  font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--popiol);
+}
+
 /* karta specyfikacji — jak metryczka wydruku */
 .spec { border: 1px solid var(--linia); border-radius: 8px; overflow: hidden; }
 .spec-wiersz {
@@ -245,7 +270,8 @@ footer {
     <span class="logo">photo-to-resin<span class="kropka">_</span></span>
     <nav aria-label="Nawigacja">
       <a href="#proces">Jak to działa</a>
-      <a href="#przyklady">Przykłady</a>
+      <a href="#figurki">Figurki</a>
+      <a href="#przyklady">Litofany</a>
       <a href="#jupyter">Interfejs</a>
       <a href="#pobierz">Pobierz</a>
     </nav>
@@ -300,8 +326,89 @@ footer {
     </div>
   </section>
 
+  <section id="figurki">
+    <p class="naglowek-sekcji">Figurki</p>
+    <h2>Od zdjęcia do figurki — pięć pełnych przejść</h2>
+    <p class="legenda">
+      Każdy wiersz to kompletny pipeline: <b>01 zdjęcie</b> (syntetyczne demo z gpt-image-1 —
+      bez prawdziwych zdjęć) → <b>02 wizualizacja figurki</b> (gpt-image-1) →
+      <b>03–04 model 3D</b> (TripoSR, image-to-3D) → szczelny STL, wysokość 90&nbsp;mm,
+      gotowy do slicera żywicznego.
+    </p>
+
+    <article class="przeplyw">
+      <div class="etapy">
+        <figure><img src="figurki/mala-czarodziejka-zdjecie.png" alt="Zdjęcie: dziewczynka w stroju czarownicy z różdżką" loading="lazy"><figcaption><b>01</b> zdjęcie</figcaption></figure>
+        <figure><img src="figurki/mala-czarodziejka-wizualizacja.png" alt="Wizualizacja figurki czarodziejki (szara rzeźba)" loading="lazy"><figcaption><b>02</b> wizualizacja</figcaption></figure>
+        <figure><img src="figurki/mala-czarodziejka-render.png" alt="Model 3D czarodziejki — przód" loading="lazy"><figcaption><b>03</b> model 3D — przód</figcaption></figure>
+        <figure><img src="figurki/mala-czarodziejka-render-bok.png" alt="Model 3D czarodziejki — profil" loading="lazy"><figcaption><b>04</b> model 3D — profil</figcaption></figure>
+      </div>
+      <div class="przeplyw-info">
+        <h3>Mała czarodziejka</h3>
+        <span class="meta">90 mm · 104 352 trójkątów · szczelna siatka</span>
+        <a href="figurki/mala-czarodziejka-figurka.stl" download>Pobierz STL (5.2 MB)</a>
+      </div>
+    </article>
+
+    <article class="przeplyw">
+      <div class="etapy">
+        <figure><img src="figurki/rycerz-z-kartonu-zdjecie.png" alt="Zdjęcie: chłopiec w kartonowej zbroi rycerza" loading="lazy"><figcaption><b>01</b> zdjęcie</figcaption></figure>
+        <figure><img src="figurki/rycerz-z-kartonu-wizualizacja.png" alt="Wizualizacja figurki rycerza (szara rzeźba)" loading="lazy"><figcaption><b>02</b> wizualizacja</figcaption></figure>
+        <figure><img src="figurki/rycerz-z-kartonu-render.png" alt="Model 3D rycerza — przód" loading="lazy"><figcaption><b>03</b> model 3D — przód</figcaption></figure>
+        <figure><img src="figurki/rycerz-z-kartonu-render-bok.png" alt="Model 3D rycerza — profil" loading="lazy"><figcaption><b>04</b> model 3D — profil</figcaption></figure>
+      </div>
+      <div class="przeplyw-info">
+        <h3>Rycerz z kartonu</h3>
+        <span class="meta">90 mm · 78 140 trójkątów · szczelna siatka</span>
+        <a href="figurki/rycerz-z-kartonu-figurka.stl" download>Pobierz STL (3.9 MB)</a>
+      </div>
+    </article>
+
+    <article class="przeplyw">
+      <div class="etapy">
+        <figure><img src="figurki/baletnica-zdjecie.png" alt="Zdjęcie: dziewczynka w sukience baletowej w piruecie" loading="lazy"><figcaption><b>01</b> zdjęcie</figcaption></figure>
+        <figure><img src="figurki/baletnica-wizualizacja.png" alt="Wizualizacja figurki baletnicy (szara rzeźba)" loading="lazy"><figcaption><b>02</b> wizualizacja</figcaption></figure>
+        <figure><img src="figurki/baletnica-render.png" alt="Model 3D baletnicy — przód" loading="lazy"><figcaption><b>03</b> model 3D — przód</figcaption></figure>
+        <figure><img src="figurki/baletnica-render-bok.png" alt="Model 3D baletnicy — profil" loading="lazy"><figcaption><b>04</b> model 3D — profil</figcaption></figure>
+      </div>
+      <div class="przeplyw-info">
+        <h3>Baletnica</h3>
+        <span class="meta">90 mm · 104 796 trójkątów · szczelna siatka</span>
+        <a href="figurki/baletnica-figurka.stl" download>Pobierz STL (5.2 MB)</a>
+      </div>
+    </article>
+
+    <article class="przeplyw">
+      <div class="etapy">
+        <figure><img src="figurki/pies-superbohater-zdjecie.png" alt="Zdjęcie: corgi w pelerynie superbohatera" loading="lazy"><figcaption><b>01</b> zdjęcie</figcaption></figure>
+        <figure><img src="figurki/pies-superbohater-wizualizacja.png" alt="Wizualizacja figurki psa (szara rzeźba)" loading="lazy"><figcaption><b>02</b> wizualizacja</figcaption></figure>
+        <figure><img src="figurki/pies-superbohater-render.png" alt="Model 3D psa superbohatera — przód" loading="lazy"><figcaption><b>03</b> model 3D — przód</figcaption></figure>
+        <figure><img src="figurki/pies-superbohater-render-bok.png" alt="Model 3D psa superbohatera — profil" loading="lazy"><figcaption><b>04</b> model 3D — profil</figcaption></figure>
+      </div>
+      <div class="przeplyw-info">
+        <h3>Pies superbohater</h3>
+        <span class="meta">90 mm · 108 914 trójkątów · szczelna siatka</span>
+        <a href="figurki/pies-superbohater-figurka.stl" download>Pobierz STL (5.5 MB)</a>
+      </div>
+    </article>
+
+    <article class="przeplyw">
+      <div class="etapy">
+        <figure><img src="figurki/maly-astronauta-zdjecie.png" alt="Zdjęcie: dziecko w stroju astronauty" loading="lazy"><figcaption><b>01</b> zdjęcie</figcaption></figure>
+        <figure><img src="figurki/maly-astronauta-wizualizacja.png" alt="Wizualizacja figurki astronauty (szara rzeźba)" loading="lazy"><figcaption><b>02</b> wizualizacja</figcaption></figure>
+        <figure><img src="figurki/maly-astronauta-render.png" alt="Model 3D astronauty — przód" loading="lazy"><figcaption><b>03</b> model 3D — przód</figcaption></figure>
+        <figure><img src="figurki/maly-astronauta-render-bok.png" alt="Model 3D astronauty — profil" loading="lazy"><figcaption><b>04</b> model 3D — profil</figcaption></figure>
+      </div>
+      <div class="przeplyw-info">
+        <h3>Mały astronauta</h3>
+        <span class="meta">90 mm · 104 066 trójkątów · szczelna siatka</span>
+        <a href="figurki/maly-astronauta-figurka.stl" download>Pobierz STL (5.2 MB)</a>
+      </div>
+    </article>
+  </section>
+
   <section id="przyklady">
-    <p class="naglowek-sekcji">Przykłady</p>
+    <p class="naglowek-sekcji">Litofany</p>
     <h2>Pięć zdjęć, pięć litofanów — cały pipeline</h2>
     <p class="legenda">
       Wszystko poniżej wygenerował notebook <b>notebooks/przyklady.ipynb</b> jednym „Run All":
