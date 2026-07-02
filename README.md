@@ -63,14 +63,18 @@ Pełne przejście "zdjęcie → figurka do druku" w dwóch skryptach:
 # (gpt-image-1; wymaga OPENAI_API_KEY)
 .venv/bin/python scripts/figurki_pipeline.py
 
-# etap 3-4: geometria 3D (TripoSR, image-to-3D), STL ~90 mm i rendery
+# etap 3-4: geometria 3D (image-to-3D), STL ~90 mm i rendery
+# silnik Tripo API (jakość SoTA; wymaga TRIPO_API_KEY i kredytów API):
+FIGURKI_ENGINE=tripo python scripts/figurki_3d.py
+# albo lokalny TripoSR (bez klucza, słabsza jakość):
 TRIPOSR_DIR=<klon TripoSR> TRIPOSR_DEVICE=mps python scripts/figurki_3d.py
 ```
 
 Wyniki trafiają do `site/figurki/` i zasilają sekcję "Figurki" na stronie.
-Demo nie używa prawdziwych zdjęć — wejścia też są generowane. TripoSR to
-bezkluczowa lokalna alternatywa; produkcyjnie PRD zakłada model SoTA
-(Hunyuan3D / Rodin / Tripo API).
+Demo nie używa prawdziwych zdjęć — wejścia też są generowane. Modele Tripo
+składają się z dziesiątek otwartych powłok, więc pipeline przebudowuje je
+w jedną szczelną bryłę (pole odległości + marching cubes), a pobrane GLB
+trafiają do `.cache/figurki/`, żeby nie płacić dwa razy za tę samą scenę.
 
 ## Galeria przykładów
 

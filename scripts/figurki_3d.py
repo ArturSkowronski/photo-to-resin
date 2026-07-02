@@ -50,6 +50,11 @@ def generate_mesh_tripo(viz_png: Path, workdir: Path) -> Path:
     headers = {"Authorization": f"Bearer {key}"}
     api = "https://api.tripo3d.ai/v2/openapi"
 
+    cache = ROOT / ".cache" / "figurki" / f"{viz_png.stem}.glb"
+    if cache.exists():
+        print(f"  tripo: GLB z cache ({cache.name})", flush=True)
+        return cache
+
     with open(viz_png, "rb") as fh:
         up = requests.post(f"{api}/upload/sts", headers=headers,
                            files={"file": (viz_png.name, fh, "image/png")}, timeout=120)
@@ -79,11 +84,11 @@ def generate_mesh_tripo(viz_png: Path, workdir: Path) -> Path:
         if status in ("failed", "banned", "expired", "cancelled"):
             raise RuntimeError(f"Tripo task {status}")
 
-    out = workdir / "model.glb"
     data = requests.get(url, timeout=300)
     data.raise_for_status()
-    out.write_bytes(data.content)
-    return out
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_bytes(data.content)
+    return cache
 
 
 def generate_mesh(viz_png: Path, workdir: Path) -> Path:
@@ -126,32 +131,51 @@ def _repair_watertight(mesh):
 
 
 def _rotate_up_to_z(mesh):
-    """Wykrywa oś pionu i obraca bryłę do z-up.
+    """Obraca bryłę do z-up według konwencji silnika.
 
-    Figurka stoi na płaskiej podstawce, więc "dół" to ta ściana bboxa,
-    przy której siedzi wyraźnie najwięcej wierzchołków. TripoSR daje z-up,
-    Tripo (glTF) y-up — heurystyka obsługuje oba bez zgadywania.
+    Heurystyka "podstawka = największe skupisko wierzchołków" zawodzi
+    (rondo kapelusza potrafi wygrać z podstawką), więc konwencja jest
+    zadeklarowana wprost: glTF z Tripo to y-up, TripoSR daje z-up.
     """
     import trimesh
 
-    v = mesh.vertices
-    lo, hi = mesh.bounds
-    ext = hi - lo
-    best_axis, best_sign, best_count = 2, 1, -1
-    for axis in range(3):
-        margin = 0.02 * ext[axis]
-        at_min = int((v[:, axis] < lo[axis] + margin).sum())
-        at_max = int((v[:, axis] > hi[axis] - margin).sum())
-        if at_min > best_count:
-            best_axis, best_sign, best_count = axis, 1, at_min   # dół przy min
-        if at_max > best_count:
-            best_axis, best_sign, best_count = axis, -1, at_max  # dół przy max
-    up = np.zeros(3)
-    up[best_axis] = best_sign  # wektor od podstawki w górę bryły
-    if not np.allclose(up, [0, 0, 1]):
-        rot = trimesh.geometry.align_vectors(up, [0, 0, 1])
-        mesh.apply_transform(rot)
+    if os.environ.get("FIGURKI_ENGINE") == "tripo":
+        mesh.apply_transform(
+            trimesh.transformations.rotation_matrix(np.pi / 2, [1, 0, 0])
+        )
     return mesh
+
+
+def _voxel_remesh(mesh, res: int = 420):
+    """Przebudowuje bryłę przez pole odległości ze znakiem + marching cubes.
+
+    Jedyna niezawodna droga dla modeli generatywnych złożonych z dziesiątek
+    otwartych, przecinających się powłok (Tripo): pymeshfix i boolean union
+    na takim wejściu zawodzą. Zwraca pojedynczą szczelną powłokę.
+    """
+    import open3d as o3d
+    from skimage import measure
+    import trimesh
+
+    scene = o3d.t.geometry.RaycastingScene()
+    scene.add_triangles(o3d.t.geometry.TriangleMesh.from_legacy(
+        o3d.geometry.TriangleMesh(
+            o3d.utility.Vector3dVector(mesh.vertices),
+            o3d.utility.Vector3iVector(mesh.faces),
+        )))
+    lo, hi = mesh.bounds
+    pad = 0.03 * (hi - lo).max()
+    lo, hi = lo - pad, hi + pad
+    spacing = (hi - lo).max() / res
+    dims = np.ceil((hi - lo) / spacing).astype(int) + 1
+    axes = [np.linspace(lo[i], lo[i] + (dims[i] - 1) * spacing, dims[i]) for i in range(3)]
+    grid = np.stack(np.meshgrid(*axes, indexing="ij"), axis=-1).reshape(-1, 3).astype(np.float32)
+    sdf = scene.compute_signed_distance(o3d.core.Tensor(grid)).numpy().reshape(dims)
+
+    verts, faces, _, _ = measure.marching_cubes(sdf, level=0.0, spacing=(spacing,) * 3)
+    verts += lo
+    out = trimesh.Trimesh(verts, faces)
+    return sorted(out.split(only_watertight=False), key=lambda p: len(p.faces))[-1]
 
 
 def to_print_scale(mesh):
@@ -160,7 +184,13 @@ def to_print_scale(mesh):
     mesh = _rotate_up_to_z(mesh)
     mesh.fill_holes()  # marching cubes zostawia otwartą podstawę na granicy siatki
     if not mesh.is_watertight:
-        mesh = _repair_watertight(mesh)
+        if mesh.body_count > 1:  # wiele otwartych powłok -> pełny remesh
+            mesh = _voxel_remesh(mesh)
+            target = int(os.environ.get("FIGURKI_TARGET_FACES", "160000"))
+            if len(mesh.faces) > target:
+                mesh = mesh.simplify_quadric_decimation(face_count=target)
+        if not mesh.is_watertight:
+            mesh = _repair_watertight(mesh)
     extent = mesh.bounds[1] - mesh.bounds[0]
     mesh.apply_scale(TARGET_HEIGHT_MM / extent[2])
     mesh.apply_translation(-mesh.bounds[0])
