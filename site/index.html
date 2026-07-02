@@ -186,7 +186,7 @@ section h2 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 700; margin-botto
   border: 1px solid var(--linia); border-radius: 8px; background: var(--noc-2);
   padding: 20px; margin-bottom: 24px;
 }
-.etapy { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.etapy { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
 .etapy figure { margin: 0; }
 .etapy img {
   display: block; width: 100%; aspect-ratio: 1; object-fit: contain;
@@ -245,6 +245,39 @@ section h2 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 700; margin-botto
   background: var(--zar); color: var(--noc); font-weight: 700; font-size: 16px;
 }
 .przycisk:hover { background: var(--miod); text-decoration: none; }
+
+/* interaktywny model 3D — kafelek i dialog z viewerem */
+.obrot {
+  position: relative; display: block; width: 100%;
+  border: none; padding: 0; background: none; cursor: pointer;
+}
+.obrot img { opacity: 0.45; }
+.obrot-znak {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: "JetBrains Mono", monospace; font-size: 14px; color: var(--zar);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+}
+.obrot:hover img, .obrot:focus-visible img { opacity: 0.7; }
+.obrot:focus-visible { outline: 2px solid var(--zar); outline-offset: 2px; }
+.podglad3d { border: none; padding: 0; background: transparent; }
+.podglad3d::backdrop { background: rgba(10, 7, 4, 0.88); backdrop-filter: blur(4px); }
+.scena3d {
+  width: min(88vw, 900px); height: min(72vh, 640px);
+  border-radius: 8px; background: var(--noc-2); border: 1px solid var(--linia);
+  display: grid; place-items: center;
+  font-family: "JetBrains Mono", monospace; font-size: 14px; color: var(--popiol);
+}
+.scena3d canvas { display: block; border-radius: 8px; cursor: grab; }
+.scena3d canvas:active { cursor: grabbing; }
+.podglad3d .pasek {
+  display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px;
+  font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--mleko);
+}
+.podglad3d .pasek button {
+  border: 1px solid var(--linia); background: none; color: var(--zar);
+  font: inherit; padding: 4px 14px; border-radius: 6px; cursor: pointer;
+}
+.podglad3d .pasek button:hover { border-color: var(--zar); }
 
 /* lightbox — powiększenie każdego kadru galerii */
 .zoomowalne { cursor: zoom-in; }
@@ -349,7 +382,7 @@ footer {
     <p class="legenda">
       Każdy wiersz to kompletny pipeline: <b>01 zdjęcie</b> (syntetyczne demo z gpt-image-1 —
       bez prawdziwych zdjęć) → <b>02 wizualizacja figurki</b> (gpt-image-1) →
-      <b>03–04 model 3D</b> (Tripo AI, image-to-3D) → szczelny STL, wysokość 90&nbsp;mm,
+      <b>03–05 model 3D</b> (Tripo AI, image-to-3D; kafelek 05 obraca się i przybliża) → szczelny STL, wysokość 90&nbsp;mm,
       gotowy do slicera żywicznego.
     </p>
 
@@ -359,6 +392,7 @@ footer {
         <figure><img src="figurki/mala-czarodziejka-wizualizacja.png" alt="Wizualizacja figurki czarodziejki (szara rzeźba)" loading="lazy"><figcaption><b>02</b> wizualizacja</figcaption></figure>
         <figure><img src="figurki/mala-czarodziejka-render.png" alt="Model 3D czarodziejki — przód" loading="lazy"><figcaption><b>03</b> model 3D — przód</figcaption></figure>
         <figure><img src="figurki/mala-czarodziejka-render-bok.png" alt="Model 3D czarodziejki — profil" loading="lazy"><figcaption><b>04</b> model 3D — profil</figcaption></figure>
+        <figure class="f3d"><button class="obrot" data-stl="figurki/mala-czarodziejka-figurka.stl" data-tytul="Mała czarodziejka" aria-label="Otwórz interaktywny model 3D: Mała czarodziejka"><img src="figurki/mala-czarodziejka-render.png" alt="" loading="lazy"><span class="obrot-znak">⟳ 360°</span></button><figcaption><b>05</b> obróć i przybliż</figcaption></figure>
       </div>
       <div class="przeplyw-info">
         <h3>Mała czarodziejka</h3>
@@ -373,6 +407,7 @@ footer {
         <figure><img src="figurki/rycerz-z-kartonu-wizualizacja.png" alt="Wizualizacja figurki rycerza (szara rzeźba)" loading="lazy"><figcaption><b>02</b> wizualizacja</figcaption></figure>
         <figure><img src="figurki/rycerz-z-kartonu-render.png" alt="Model 3D rycerza — przód" loading="lazy"><figcaption><b>03</b> model 3D — przód</figcaption></figure>
         <figure><img src="figurki/rycerz-z-kartonu-render-bok.png" alt="Model 3D rycerza — profil" loading="lazy"><figcaption><b>04</b> model 3D — profil</figcaption></figure>
+        <figure class="f3d"><button class="obrot" data-stl="figurki/rycerz-z-kartonu-figurka.stl" data-tytul="Rycerz z kartonu" aria-label="Otwórz interaktywny model 3D: Rycerz z kartonu"><img src="figurki/rycerz-z-kartonu-render.png" alt="" loading="lazy"><span class="obrot-znak">⟳ 360°</span></button><figcaption><b>05</b> obróć i przybliż</figcaption></figure>
       </div>
       <div class="przeplyw-info">
         <h3>Rycerz z kartonu</h3>
@@ -387,6 +422,7 @@ footer {
         <figure><img src="figurki/baletnica-wizualizacja.png" alt="Wizualizacja figurki baletnicy (szara rzeźba)" loading="lazy"><figcaption><b>02</b> wizualizacja</figcaption></figure>
         <figure><img src="figurki/baletnica-render.png" alt="Model 3D baletnicy — przód" loading="lazy"><figcaption><b>03</b> model 3D — przód</figcaption></figure>
         <figure><img src="figurki/baletnica-render-bok.png" alt="Model 3D baletnicy — profil" loading="lazy"><figcaption><b>04</b> model 3D — profil</figcaption></figure>
+        <figure class="f3d"><button class="obrot" data-stl="figurki/baletnica-figurka.stl" data-tytul="Baletnica" aria-label="Otwórz interaktywny model 3D: Baletnica"><img src="figurki/baletnica-render.png" alt="" loading="lazy"><span class="obrot-znak">⟳ 360°</span></button><figcaption><b>05</b> obróć i przybliż</figcaption></figure>
       </div>
       <div class="przeplyw-info">
         <h3>Baletnica</h3>
@@ -401,6 +437,7 @@ footer {
         <figure><img src="figurki/pies-superbohater-wizualizacja.png" alt="Wizualizacja figurki psa (szara rzeźba)" loading="lazy"><figcaption><b>02</b> wizualizacja</figcaption></figure>
         <figure><img src="figurki/pies-superbohater-render.png" alt="Model 3D psa superbohatera — przód" loading="lazy"><figcaption><b>03</b> model 3D — przód</figcaption></figure>
         <figure><img src="figurki/pies-superbohater-render-bok.png" alt="Model 3D psa superbohatera — profil" loading="lazy"><figcaption><b>04</b> model 3D — profil</figcaption></figure>
+        <figure class="f3d"><button class="obrot" data-stl="figurki/pies-superbohater-figurka.stl" data-tytul="Pies superbohater" aria-label="Otwórz interaktywny model 3D: Pies superbohater"><img src="figurki/pies-superbohater-render.png" alt="" loading="lazy"><span class="obrot-znak">⟳ 360°</span></button><figcaption><b>05</b> obróć i przybliż</figcaption></figure>
       </div>
       <div class="przeplyw-info">
         <h3>Pies superbohater</h3>
@@ -415,6 +452,7 @@ footer {
         <figure><img src="figurki/maly-astronauta-wizualizacja.png" alt="Wizualizacja figurki astronauty (szara rzeźba)" loading="lazy"><figcaption><b>02</b> wizualizacja</figcaption></figure>
         <figure><img src="figurki/maly-astronauta-render.png" alt="Model 3D astronauty — przód" loading="lazy"><figcaption><b>03</b> model 3D — przód</figcaption></figure>
         <figure><img src="figurki/maly-astronauta-render-bok.png" alt="Model 3D astronauty — profil" loading="lazy"><figcaption><b>04</b> model 3D — profil</figcaption></figure>
+        <figure class="f3d"><button class="obrot" data-stl="figurki/maly-astronauta-figurka.stl" data-tytul="Mały astronauta" aria-label="Otwórz interaktywny model 3D: Mały astronauta"><img src="figurki/maly-astronauta-render.png" alt="" loading="lazy"><span class="obrot-znak">⟳ 360°</span></button><figcaption><b>05</b> obróć i przybliż</figcaption></figure>
       </div>
       <div class="przeplyw-info">
         <h3>Mały astronauta</h3>
@@ -552,6 +590,24 @@ footer {
   </footer>
 </div>
 
+<dialog id="podglad3d" class="podglad3d" aria-label="Interaktywny model 3D">
+  <div class="scena3d"></div>
+  <div class="pasek">
+    <span class="tytul3d"></span>
+    <span>przeciągnij = obrót · kółko = zbliżenie</span>
+    <button type="button" class="zamknij3d">Zamknij</button>
+  </div>
+</dialog>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+
 <dialog id="podglad" class="podglad" aria-label="Powiększony podgląd">
   <img alt="">
   <p class="podpis-podgladu"></p>
@@ -570,7 +626,7 @@ footer {
     dlg.showModal();
   }
 
-  document.querySelectorAll(".etapy img, .karta-glowna, .karta-thumbs img")
+  document.querySelectorAll(".etapy figure:not(.f3d) img, .karta-glowna, .karta-thumbs img")
     .forEach(function (img) {
       img.classList.add("zoomowalne");
       img.tabIndex = 0;
@@ -582,6 +638,90 @@ footer {
     });
 
   dlg.addEventListener("click", function () { dlg.close(); });
+})();
+</script>
+
+<script>
+(function () {
+  var dlg = document.getElementById("podglad3d");
+  var scena = dlg.querySelector(".scena3d");
+  var tytul = dlg.querySelector(".tytul3d");
+  var sprzatanie = null;
+
+  async function otworz(stlUrl, nazwa) {
+    tytul.textContent = nazwa;
+    scena.textContent = "Wczytywanie modelu…";
+    dlg.showModal();
+    try {
+      var THREE = await import("three");
+      var STLLoader = (await import("three/addons/loaders/STLLoader.js")).STLLoader;
+      var OrbitControls = (await import("three/addons/controls/OrbitControls.js")).OrbitControls;
+
+      var geometria = await new STLLoader().loadAsync(stlUrl);
+      geometria.computeVertexNormals();
+      geometria.center();
+      geometria.rotateX(-Math.PI / 2); // STL jest z-up, three.js y-up
+
+      var szer = scena.clientWidth, wys = scena.clientHeight;
+      var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(szer, wys);
+
+      var sceneGL = new THREE.Scene();
+      var kamera = new THREE.PerspectiveCamera(40, szer / wys, 1, 2000);
+      geometria.computeBoundingSphere();
+      var r = geometria.boundingSphere.radius;
+      kamera.position.set(r * 1.6, r * 0.9, r * 2.2);
+
+      sceneGL.add(new THREE.HemisphereLight(0xfff4e0, 0x40331f, 1.15));
+      var slonce = new THREE.DirectionalLight(0xffd9a0, 1.6);
+      slonce.position.set(2, 3, 2.5);
+      sceneGL.add(slonce);
+
+      var material = new THREE.MeshStandardMaterial({
+        color: 0xe9e2d6, roughness: 0.55, metalness: 0.05,
+      });
+      sceneGL.add(new THREE.Mesh(geometria, material));
+
+      var controls = new OrbitControls(kamera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 1.6;
+      controls.addEventListener("start", function () { controls.autoRotate = false; });
+
+      scena.textContent = "";
+      scena.appendChild(renderer.domElement);
+
+      var trwa = true;
+      (function petla() {
+        if (!trwa) return;
+        requestAnimationFrame(petla);
+        controls.update();
+        renderer.render(sceneGL, kamera);
+      })();
+
+      sprzatanie = function () {
+        trwa = false;
+        controls.dispose();
+        renderer.dispose();
+        geometria.dispose();
+        material.dispose();
+        scena.textContent = "";
+        sprzatanie = null;
+      };
+    } catch (e) {
+      scena.textContent = "Nie udało się wczytać modelu: " + e.message;
+    }
+  }
+
+  document.querySelectorAll(".obrot").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      otworz(btn.dataset.stl, btn.dataset.tytul);
+    });
+  });
+  dlg.querySelector(".zamknij3d").addEventListener("click", function () { dlg.close(); });
+  dlg.addEventListener("click", function (e) { if (e.target === dlg) dlg.close(); });
+  dlg.addEventListener("close", function () { if (sprzatanie) sprzatanie(); });
 })();
 </script>
 
