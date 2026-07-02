@@ -246,6 +246,23 @@ section h2 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 700; margin-botto
 }
 .przycisk:hover { background: var(--miod); text-decoration: none; }
 
+/* lightbox — powiększenie każdego kadru galerii */
+.zoomowalne { cursor: zoom-in; }
+.zoomowalne:focus-visible { outline: 2px solid var(--zar); outline-offset: 2px; }
+.podglad {
+  border: none; padding: 0; background: transparent;
+  max-width: min(92vw, 1400px); max-height: 92vh;
+}
+.podglad::backdrop { background: rgba(10, 7, 4, 0.88); backdrop-filter: blur(4px); }
+.podglad img {
+  display: block; max-width: min(92vw, 1400px); max-height: 86vh;
+  width: auto; height: auto; border-radius: 8px; cursor: zoom-out;
+}
+.podglad .podpis-podgladu {
+  margin-top: 10px; text-align: center;
+  font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--mleko);
+}
+
 footer {
   border-top: 1px solid var(--linia); padding: 32px 0 48px;
   color: var(--popiol); font-size: 14px;
@@ -345,8 +362,8 @@ footer {
       </div>
       <div class="przeplyw-info">
         <h3>Mała czarodziejka</h3>
-        <span class="meta">90 mm · 104 352 trójkątów · szczelna siatka</span>
-        <a href="figurki/mala-czarodziejka-figurka.stl" download>Pobierz STL (5.2 MB)</a>
+        <span class="meta">90 mm · 164 538 trójkątów · szczelna siatka</span>
+        <a href="figurki/mala-czarodziejka-figurka.stl" download>Pobierz STL (8.2 MB)</a>
       </div>
     </article>
 
@@ -359,8 +376,8 @@ footer {
       </div>
       <div class="przeplyw-info">
         <h3>Rycerz z kartonu</h3>
-        <span class="meta">90 mm · 78 140 trójkątów · szczelna siatka</span>
-        <a href="figurki/rycerz-z-kartonu-figurka.stl" download>Pobierz STL (3.9 MB)</a>
+        <span class="meta">90 mm · 123 702 trójkątów · szczelna siatka</span>
+        <a href="figurki/rycerz-z-kartonu-figurka.stl" download>Pobierz STL (6.2 MB)</a>
       </div>
     </article>
 
@@ -373,8 +390,8 @@ footer {
       </div>
       <div class="przeplyw-info">
         <h3>Baletnica</h3>
-        <span class="meta">90 mm · 104 796 trójkątów · szczelna siatka</span>
-        <a href="figurki/baletnica-figurka.stl" download>Pobierz STL (5.2 MB)</a>
+        <span class="meta">90 mm · 165 830 trójkątów · szczelna siatka</span>
+        <a href="figurki/baletnica-figurka.stl" download>Pobierz STL (8.3 MB)</a>
       </div>
     </article>
 
@@ -387,8 +404,8 @@ footer {
       </div>
       <div class="przeplyw-info">
         <h3>Pies superbohater</h3>
-        <span class="meta">90 mm · 108 914 trójkątów · szczelna siatka</span>
-        <a href="figurki/pies-superbohater-figurka.stl" download>Pobierz STL (5.5 MB)</a>
+        <span class="meta">90 mm · 171 764 trójkątów · szczelna siatka</span>
+        <a href="figurki/pies-superbohater-figurka.stl" download>Pobierz STL (8.6 MB)</a>
       </div>
     </article>
 
@@ -401,8 +418,8 @@ footer {
       </div>
       <div class="przeplyw-info">
         <h3>Mały astronauta</h3>
-        <span class="meta">90 mm · 104 066 trójkątów · szczelna siatka</span>
-        <a href="figurki/maly-astronauta-figurka.stl" download>Pobierz STL (5.2 MB)</a>
+        <span class="meta">90 mm · 165 282 trójkątów · szczelna siatka</span>
+        <a href="figurki/maly-astronauta-figurka.stl" download>Pobierz STL (8.3 MB)</a>
       </div>
     </article>
   </section>
@@ -534,6 +551,39 @@ footer {
     <span>Python · numpy + Pillow · zero zależności od chmury</span>
   </footer>
 </div>
+
+<dialog id="podglad" class="podglad" aria-label="Powiększony podgląd">
+  <img alt="">
+  <p class="podpis-podgladu"></p>
+</dialog>
+
+<script>
+(function () {
+  var dlg = document.getElementById("podglad");
+  var dlgImg = dlg.querySelector("img");
+  var dlgCap = dlg.querySelector(".podpis-podgladu");
+
+  function open(img) {
+    dlgImg.src = img.currentSrc || img.src;
+    dlgImg.alt = img.alt;
+    dlgCap.textContent = img.alt;
+    dlg.showModal();
+  }
+
+  document.querySelectorAll(".etapy img, .karta-glowna, .karta-thumbs img")
+    .forEach(function (img) {
+      img.classList.add("zoomowalne");
+      img.tabIndex = 0;
+      img.setAttribute("role", "button");
+      img.addEventListener("click", function () { open(img); });
+      img.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(img); }
+      });
+    });
+
+  dlg.addEventListener("click", function () { dlg.close(); });
+})();
+</script>
 
 </body>
 </html>

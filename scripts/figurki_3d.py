@@ -44,13 +44,27 @@ def generate_mesh(viz_png: Path, workdir: Path) -> Path:
         "--output-dir", str(workdir),
         "--model-save-format", "obj",
         "--device", os.environ.get("TRIPOSR_DEVICE", "cpu"),
-        "--mc-resolution", "256",
+        "--mc-resolution", os.environ.get("TRIPOSR_MC_RES", "320"),
     ]
     subprocess.run(cmd, check=True, cwd=TRIPOSR_DIR)
     mesh = workdir / "0" / "mesh.obj"
     if not mesh.exists():
         raise FileNotFoundError(f"TripoSR nie zapisał {mesh}")
     return mesh
+
+
+def _repair_watertight(mesh):
+    """Domyka siatkę pymeshfixem; bez usuwania małych komponentów (detale!)."""
+    import pymeshfix
+    import trimesh
+
+    for kwargs in ({"remove_smallest_components": False}, {}):
+        fixer = pymeshfix.MeshFix(np.asarray(mesh.vertices), np.asarray(mesh.faces))
+        fixer.repair(**kwargs)
+        fixed = trimesh.Trimesh(fixer.points, fixer.faces)
+        if fixed.is_watertight:
+            return fixed
+    return mesh  # nie udało się — manifest pokaże watertight: false
 
 
 def to_print_scale(mesh):
@@ -61,6 +75,8 @@ def to_print_scale(mesh):
     """
     mesh.merge_vertices()
     mesh.fill_holes()  # marching cubes zostawia otwartą podstawę na granicy siatki
+    if not mesh.is_watertight:
+        mesh = _repair_watertight(mesh)
     extent = mesh.bounds[1] - mesh.bounds[0]
     mesh.apply_scale(TARGET_HEIGHT_MM / extent[2])
     mesh.apply_translation(-mesh.bounds[0])
