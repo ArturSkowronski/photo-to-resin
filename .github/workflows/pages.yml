@@ -29,3 +29,6 @@ jobs:
           path: site
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # STL-e figurek podnoszą artefakt do ~110 MB, domyślne 10 min nie starcza
+          timeout: 1800000
