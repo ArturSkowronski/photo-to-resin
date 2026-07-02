@@ -50,7 +50,9 @@ def generate_mesh_tripo(viz_png: Path, workdir: Path) -> Path:
     headers = {"Authorization": f"Bearer {key}"}
     api = "https://api.tripo3d.ai/v2/openapi"
 
-    cache = ROOT / ".cache" / "figurki" / f"{viz_png.stem}.glb"
+    model_version = os.environ.get("TRIPO_MODEL_VERSION", "v3.0-20250812")
+    geometry_quality = os.environ.get("TRIPO_GEOMETRY_QUALITY", "detailed")
+    cache = ROOT / ".cache" / "figurki" / f"{viz_png.stem}-{model_version}-{geometry_quality}.glb"
     if cache.exists():
         print(f"  tripo: GLB z cache ({cache.name})", flush=True)
         return cache
@@ -63,6 +65,8 @@ def generate_mesh_tripo(viz_png: Path, workdir: Path) -> Path:
 
     task = requests.post(f"{api}/task", headers=headers, timeout=60, json={
         "type": "image_to_model",
+        "model_version": model_version,
+        "geometry_quality": geometry_quality,
         "file": {"type": "png", "file_token": token},
         "texture": False,   # do druku potrzebna tylko geometria
         "pbr": False,
@@ -146,16 +150,21 @@ def _rotate_up_to_z(mesh):
     return mesh
 
 
-def _voxel_remesh(mesh, res: int = 512):
+def _voxel_remesh(mesh, res: int | None = None):
     """Przebudowuje bryłę przez pole odległości ze znakiem + marching cubes.
 
     Jedyna niezawodna droga dla modeli generatywnych złożonych z dziesiątek
     otwartych, przecinających się powłok (Tripo): pymeshfix i boolean union
-    na takim wejściu zawodzą. Zwraca pojedynczą szczelną powłokę.
+    na takim wejściu zawodzą. SDF liczony pasami wzdłuż X, żeby wysoka
+    rozdzielczość (FIGURKI_VOXEL_RES, domyślnie 768 ~ 0.12 mm przy 90 mm)
+    nie zjadała pamięci. Zwraca pojedynczą szczelną powłokę.
     """
     import open3d as o3d
     from skimage import measure
     import trimesh
+
+    if res is None:
+        res = int(os.environ.get("FIGURKI_VOXEL_RES", "768"))
 
     scene = o3d.t.geometry.RaycastingScene()
     scene.add_triangles(o3d.t.geometry.TriangleMesh.from_legacy(
@@ -169,8 +178,18 @@ def _voxel_remesh(mesh, res: int = 512):
     spacing = (hi - lo).max() / res
     dims = np.ceil((hi - lo) / spacing).astype(int) + 1
     axes = [np.linspace(lo[i], lo[i] + (dims[i] - 1) * spacing, dims[i]) for i in range(3)]
-    grid = np.stack(np.meshgrid(*axes, indexing="ij"), axis=-1).reshape(-1, 3).astype(np.float32)
-    sdf = scene.compute_signed_distance(o3d.core.Tensor(grid)).numpy().reshape(dims)
+
+    sdf = np.empty(dims, dtype=np.float32)
+    slab = max(1, int(4_000_000 // (dims[1] * dims[2])))  # ~4M punktów na pas
+    for x0 in range(0, dims[0], slab):
+        xs = axes[0][x0:x0 + slab]
+        grid = np.stack(
+            np.meshgrid(xs, axes[1], axes[2], indexing="ij"), axis=-1
+        ).reshape(-1, 3).astype(np.float32)
+        sdf[x0:x0 + slab] = (
+            scene.compute_signed_distance(o3d.core.Tensor(grid))
+            .numpy().reshape(len(xs), dims[1], dims[2])
+        )
 
     verts, faces, _, _ = measure.marching_cubes(sdf, level=0.0, spacing=(spacing,) * 3)
     verts += lo
@@ -186,7 +205,7 @@ def to_print_scale(mesh):
     if not mesh.is_watertight:
         if mesh.body_count > 1:  # wiele otwartych powłok -> pełny remesh
             mesh = _voxel_remesh(mesh)
-            target = int(os.environ.get("FIGURKI_TARGET_FACES", "240000"))
+            target = int(os.environ.get("FIGURKI_TARGET_FACES", "320000"))
             if len(mesh.faces) > target:
                 mesh = mesh.simplify_quadric_decimation(face_count=target)
         if not mesh.is_watertight:
@@ -208,9 +227,9 @@ def render_views(mesh, front_png: Path, side_png: Path) -> None:
     from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
     render_mesh = mesh
-    if len(mesh.faces) > 60_000:
+    if len(mesh.faces) > 140_000:
         try:
-            render_mesh = mesh.simplify_quadric_decimation(face_count=60_000)
+            render_mesh = mesh.simplify_quadric_decimation(face_count=140_000)
         except BaseException:
             pass  # bez decymacji będzie tylko wolniej
 
