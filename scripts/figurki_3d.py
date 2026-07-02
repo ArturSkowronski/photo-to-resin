@@ -146,7 +146,7 @@ def _rotate_up_to_z(mesh):
     return mesh
 
 
-def _voxel_remesh(mesh, res: int = 420):
+def _voxel_remesh(mesh, res: int = 512):
     """Przebudowuje bryłę przez pole odległości ze znakiem + marching cubes.
 
     Jedyna niezawodna droga dla modeli generatywnych złożonych z dziesiątek
@@ -186,7 +186,7 @@ def to_print_scale(mesh):
     if not mesh.is_watertight:
         if mesh.body_count > 1:  # wiele otwartych powłok -> pełny remesh
             mesh = _voxel_remesh(mesh)
-            target = int(os.environ.get("FIGURKI_TARGET_FACES", "160000"))
+            target = int(os.environ.get("FIGURKI_TARGET_FACES", "240000"))
             if len(mesh.faces) > target:
                 mesh = mesh.simplify_quadric_decimation(face_count=target)
         if not mesh.is_watertight:
