@@ -27,11 +27,11 @@
     "slug": "baletnica",
     "title": "Baletnica",
     "size_mm": [
-      44.7,
-      64.4,
+      45.5,
+      67.7,
       90.0
     ],
-    "triangles": 158850,
+    "triangles": 158872,
     "watertight": true,
     "stl_mb": 7.94
   },

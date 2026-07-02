@@ -65,8 +65,11 @@ VISUALIZATION_PROMPT = (
     "one-piece 3D-printable figurine standing on a small round base: full body, "
     "matte gray clay material like a ZBrush sculpt render, plain light neutral "
     "backdrop, even studio lighting, keep the pose, face and clothing clearly "
-    "readable, simplify fragile details so they are printable. This is a "
-    "reference for 3D model generation, not a final render."
+    "readable, simplify fragile details so they are printable. Exactly one "
+    "figure and nothing else: no other people, no hands or objects entering "
+    "from outside the frame, hands empty unless the subject clearly holds a "
+    "prop, the whole figurine fully inside the frame. This is a reference for "
+    "3D model generation, not a final render."
 )
 
 

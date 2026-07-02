@@ -270,7 +270,8 @@ section h2 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 700; margin-botto
 .scena3d canvas { display: block; border-radius: 8px; cursor: grab; }
 .scena3d canvas:active { cursor: grabbing; }
 .podglad3d .pasek {
-  display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+  width: min(88vw, 900px); margin: 10px auto 0; padding: 0 4px; box-sizing: border-box;
   font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--mleko);
 }
 .podglad3d .pasek button {
@@ -426,7 +427,7 @@ footer {
       </div>
       <div class="przeplyw-info">
         <h3>Baletnica</h3>
-        <span class="meta">90 mm · 158 850 trójkątów · szczelna siatka</span>
+        <span class="meta">90 mm · 158 872 trójkątów · szczelna siatka</span>
         <a href="figurki/baletnica-figurka.stl" download>Pobierz STL (7.9 MB)</a>
       </div>
     </article>
@@ -590,7 +591,7 @@ footer {
   </footer>
 </div>
 
-<dialog id="podglad3d" class="podglad3d" aria-label="Interaktywny model 3D">
+<dialog id="podglad3d" class="podglad3d" aria-label="Interaktywny model 3D" tabindex="-1">
   <div class="scena3d"></div>
   <div class="pasek">
     <span class="tytul3d"></span>
@@ -652,6 +653,7 @@ footer {
     tytul.textContent = nazwa;
     scena.textContent = "Wczytywanie modelu…";
     dlg.showModal();
+    dlg.focus(); // bez ramki fokusa na przycisku Zamknij przy otwarciu
     try {
       var THREE = await import("three");
       var STLLoader = (await import("three/addons/loaders/STLLoader.js")).STLLoader;
