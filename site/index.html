@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>photo-to-resin — światło wywołuje zdjęcie</title>
+<meta name="description" content="photo-to-resin zamienia zwykłe zdjęcie w litofan — plik STL gotowy do druku na drukarce żywicznej. Interfejs w Jupyterze, podgląd podświetlenia na żywo.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ffc169'/%3E%3Cpath d='M4 24 L12 12 L17 19 L21 14 L28 24 Z' fill='%2316110c'/%3E%3Ccircle cx='23' cy='9' r='3.4' fill='%2316110c'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+:root {
+  --noc: #16110c;        /* ciemny, ciepły brąz warsztatu */
+  --noc-2: #211a12;      /* panele */
+  --zar: #ffc169;        /* bursztynowy żar podświetlenia */
+  --miod: #e8a24b;       /* ciemniejszy miód */
+  --mleko: #f1e9dc;      /* mleczna żywica — tekst */
+  --popiol: #9c8f7e;     /* tekst wtórny */
+  --uv: #9d86ff;         /* fiolet lampy UV — użyty oszczędnie */
+  --linia: rgba(241, 233, 220, 0.12);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+body {
+  background: var(--noc);
+  color: var(--mleko);
+  font-family: "Schibsted Grotesk", system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.szer { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+a { color: var(--zar); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--zar); outline-offset: 3px; border-radius: 2px; }
+
+h1, h2 { font-family: "Syne", sans-serif; letter-spacing: -0.01em; }
+
+.mono { font-family: "JetBrains Mono", monospace; }
+
+/* ---------- nagłówek ---------- */
+header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 28px 0 0;
+}
+.logo { font-family: "JetBrains Mono", monospace; font-weight: 600; color: var(--mleko); font-size: 15px; }
+.logo .kropka { color: var(--zar); }
+nav { display: flex; gap: 28px; font-size: 15px; }
+nav a { color: var(--popiol); }
+nav a:hover { color: var(--zar); text-decoration: none; }
+
+/* ---------- hero z włącznikiem światła ---------- */
+.hero {
+  display: grid; grid-template-columns: 1fr 1.05fr; gap: 56px;
+  align-items: center; padding: 88px 0 104px;
+}
+.hero h1 {
+  font-size: clamp(40px, 5.6vw, 62px);
+  font-weight: 800; line-height: 1.05;
+  color: var(--popiol);
+  transition: color 1.2s ease;
+}
+.hero h1 em { font-style: normal; color: inherit; }
+.hero .opis {
+  margin-top: 24px; max-width: 44ch; color: var(--popiol); font-size: 18px;
+}
+.hero .opis b { color: var(--mleko); font-weight: 500; }
+
+/* przełącznik */
+.wlacznik {
+  margin-top: 40px; display: inline-flex; align-items: center; gap: 16px;
+  cursor: pointer; user-select: none;
+}
+.wlacznik input { position: absolute; opacity: 0; width: 52px; height: 30px; cursor: pointer; }
+.suwak {
+  width: 52px; height: 30px; border-radius: 15px; flex: none;
+  background: var(--noc-2); border: 1px solid var(--linia);
+  position: relative; transition: background 0.5s ease, box-shadow 0.5s ease;
+  pointer-events: none; /* klik trafia w ukryty checkbox pod spodem */
+}
+.suwak::after {
+  content: ""; position: absolute; top: 3px; left: 3px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--popiol);
+  transition: transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1), background 0.35s ease;
+}
+.wlacznik .napis { font-size: 15px; color: var(--popiol); transition: color 0.5s ease; }
+.wlacznik input:focus-visible + .suwak { outline: 2px solid var(--zar); outline-offset: 3px; }
+
+/* płytka litofanu */
+.plytka {
+  position: relative; border-radius: 6px; overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  transform: perspective(1200px) rotateY(-4deg);
+}
+.plytka img { display: block; width: 100%; height: auto; }
+.plytka .swieci {
+  position: absolute; inset: 0; opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.poswiata {
+  position: absolute; inset: -18%; z-index: -1; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 193, 105, 0.35), transparent 70%);
+  opacity: 0; transition: opacity 1.4s ease; pointer-events: none;
+}
+.scena { position: relative; }
+.podpis {
+  margin-top: 16px; text-align: right;
+  font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--popiol);
+}
+
+/* stan zapalony — jeden orkiestrowany moment */
+.hero:has(#swiatlo:checked) h1 { color: var(--mleko); }
+.hero:has(#swiatlo:checked) h1 em { color: var(--zar); }
+.hero:has(#swiatlo:checked) .swieci { opacity: 1; }
+.hero:has(#swiatlo:checked) .poswiata { opacity: 1; }
+.hero:has(#swiatlo:checked) .suwak {
+  background: var(--miod);
+  box-shadow: 0 0 18px rgba(255, 193, 105, 0.5);
+}
+.hero:has(#swiatlo:checked) .suwak::after { transform: translateX(22px); background: var(--noc); }
+.hero:has(#swiatlo:checked) .napis { color: var(--zar); }
+
+/* delikatna zachęta, dopóki światło zgaszone */
+@keyframes tetno { 50% { box-shadow: 0 0 14px rgba(255, 193, 105, 0.35); } }
+.hero:not(:has(#swiatlo:checked)) .suwak { animation: tetno 2.4s ease-in-out infinite; }
+
+/* ---------- sekcje ---------- */
+section { padding: 72px 0; border-top: 1px solid var(--linia); }
+.naglowek-sekcji {
+  font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 400;
+  color: var(--zar); letter-spacing: 0.14em; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+section h2 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 700; margin-bottom: 40px; max-width: 24ch; }
+
+/* proces — prawdziwa sekwencja, więc numeracja niesie informację */
+.kroki { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+.krok .nr {
+  font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--zar);
+  display: block; margin-bottom: 12px;
+}
+.krok h3 { font-size: 19px; font-weight: 700; margin-bottom: 10px; }
+.krok p { color: var(--popiol); font-size: 15.5px; }
+.krok b { color: var(--mleko); font-weight: 500; }
+
+/* karta specyfikacji — jak metryczka wydruku */
+.spec { border: 1px solid var(--linia); border-radius: 8px; overflow: hidden; }
+.spec-wiersz {
+  display: grid; grid-template-columns: 1fr 1.6fr; gap: 24px;
+  padding: 18px 24px; border-top: 1px solid var(--linia);
+  font-family: "JetBrains Mono", monospace; font-size: 14px;
+}
+.spec-wiersz:first-child { border-top: none; }
+.spec-wiersz dt { color: var(--popiol); }
+.spec-wiersz dd { color: var(--mleko); }
+.chip {
+  display: inline-block; padding: 1px 8px; border-radius: 999px;
+  border: 1px solid var(--uv); color: var(--uv); font-size: 12px; margin-left: 8px;
+}
+
+/* jupyter */
+.dwie-kolumny { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+.dwie-kolumny ul { list-style: none; margin-top: 4px; }
+.dwie-kolumny li { padding: 14px 0; border-top: 1px solid var(--linia); color: var(--popiol); font-size: 16px; }
+.dwie-kolumny li:first-child { border-top: none; }
+.dwie-kolumny li b { color: var(--mleko); font-weight: 500; }
+
+.terminal {
+  background: var(--noc-2); border: 1px solid var(--linia); border-radius: 8px;
+  padding: 22px 24px; font-family: "JetBrains Mono", monospace; font-size: 14px;
+  line-height: 1.9; overflow-x: auto;
+}
+.terminal .kom { color: var(--popiol); }
+.terminal .cmd { color: var(--mleko); white-space: pre; display: block; }
+.terminal .cmd::before { content: "$ "; color: var(--zar); }
+
+/* pobierz */
+.start { text-align: left; }
+.start .terminal { margin-top: 8px; }
+.przycisk {
+  display: inline-block; margin-top: 28px; padding: 14px 28px; border-radius: 6px;
+  background: var(--zar); color: var(--noc); font-weight: 700; font-size: 16px;
+}
+.przycisk:hover { background: var(--miod); text-decoration: none; }
+
+footer {
+  border-top: 1px solid var(--linia); padding: 32px 0 48px;
+  color: var(--popiol); font-size: 14px;
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; padding: 56px 0 72px; gap: 40px; }
+  .plytka { transform: none; }
+  .kroki { grid-template-columns: 1fr; }
+  .dwie-kolumny { grid-template-columns: 1fr; gap: 32px; }
+  .spec-wiersz { grid-template-columns: 1fr; gap: 4px; }
+  nav { gap: 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="szer">
+  <header>
+    <span class="logo">photo-to-resin<span class="kropka">_</span></span>
+    <nav aria-label="Nawigacja">
+      <a href="#proces">Jak to działa</a>
+      <a href="#jupyter">Interfejs</a>
+      <a href="#pobierz">Pobierz</a>
+    </nav>
+  </header>
+
+  <section class="hero" style="border-top:none">
+    <div>
+      <h1>Światło <em>wywołuje</em> zdjęcie.</h1>
+      <p class="opis">
+        photo-to-resin zamienia zwykły JPG w <b>litofan</b> — cienką płytkę żywicy,
+        na której obraz pojawia się dopiero pod światło. Wgrywasz zdjęcie,
+        kręcisz suwakami, dostajesz <b>STL gotowy do slicera</b>.
+      </p>
+      <label class="wlacznik">
+        <input type="checkbox" id="swiatlo" aria-label="Podświetl litofan">
+        <span class="suwak" aria-hidden="true"></span>
+        <span class="napis">Podświetl litofan</span>
+      </label>
+    </div>
+    <div class="scena">
+      <div class="poswiata"></div>
+      <div class="plytka">
+        <img src="assets/litofan-zgaszony.png" alt="Zgaszony litofan: mleczna płytka żywicy z ledwie widocznym reliefem" width="1008" height="768">
+        <img class="swieci" src="assets/litofan-podswietlony.png" alt="Ten sam litofan podświetlony od tyłu: wyraźny pejzaż górski ze słońcem" width="1008" height="768">
+      </div>
+      <p class="podpis">120 × 90 mm · 0.6–2.8 mm · wygenerowane tym narzędziem</p>
+    </div>
+  </section>
+
+  <section id="proces">
+    <p class="naglowek-sekcji">Jak to działa</p>
+    <h2>Trzy przekształcenia, zero modelowania</h2>
+    <div class="kroki">
+      <div class="krok">
+        <span class="nr">01</span>
+        <h3>Jasność staje się grubością</h3>
+        <p>Każdy piksel dostaje swoją grubość żywicy: <b>cienie do 2.8 mm</b>, światła
+        <b>od 0.6 mm</b>. Gamma i rozmycie do wyregulowania suwakiem, ramka usztywnia wydruk.</p>
+      </div>
+      <div class="krok">
+        <span class="nr">02</span>
+        <h3>Mapa wysokości staje się bryłą</h3>
+        <p>Powstaje <b>szczelna siatka</b>: rzeźbiona powierzchnia, płaski spód, domknięte
+        ścianki. Każda krawędź należy do dokładnie dwóch trójkątów — slicer nie ma na co narzekać.</p>
+      </div>
+      <div class="krok">
+        <span class="nr">03</span>
+        <h3>Bryła staje się plikiem STL</h3>
+        <p>Binarny STL z wymiarami w milimetrach ląduje na dysku i idzie <b>prosto do
+        Lychee albo Chitubox</b>. Bez konwersji, bez skalowania, bez naprawiania siatki.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="parametry">
+    <p class="naglowek-sekcji">Parametry</p>
+    <h2>Metryczka wydruku</h2>
+    <dl class="spec">
+      <div class="spec-wiersz"><dt>szerokość</dt><dd>20–200 mm</dd></div>
+      <div class="spec-wiersz"><dt>grubość</dt><dd>0.2–4.0 mm (zakres min–max jednym suwakiem)</dd></div>
+      <div class="spec-wiersz"><dt>rozdzielczość siatki</dt><dd>1–10 px/mm</dd></div>
+      <div class="spec-wiersz"><dt>korekcje obrazu</dt><dd>gamma · rozmycie · negatyw · ramka</dd></div>
+      <div class="spec-wiersz"><dt>wyjście</dt><dd>binarny STL, wymiary w mm</dd></div>
+      <div class="spec-wiersz"><dt>żywica</dt><dd>mleczna lub jasnoszara <span class="chip">UV&nbsp;405&nbsp;nm</span></dd></div>
+    </dl>
+  </section>
+
+  <section id="jupyter">
+    <p class="naglowek-sekcji">Interfejs</p>
+    <h2>Suwaki zamiast kodu, w Jupyterze</h2>
+    <div class="dwie-kolumny">
+      <ul>
+        <li><b>Podgląd podświetlenia na żywo.</b> Symulacja transmisji światła przez żywicę
+        (prawo Beera–Lamberta) odświeża się przy każdym ruchu suwaka.</li>
+        <li><b>Rozmiar pliku znany z góry.</b> Panel szacuje liczbę trójkątów i megabajty,
+        zanim klikniesz „Generuj STL".</li>
+        <li><b>Działa od pierwszej sekundy.</b> Bez wgranego zdjęcia panel pokazuje
+        przykładowy pejzaż — parametry można poznać przed sięgnięciem po własne pliki.</li>
+      </ul>
+      <div class="terminal" aria-label="Polecenia uruchamiające interfejs">
+        <span class="kom"># jednorazowo</span>
+        <span class="cmd">pip install -e ".[notebook]"</span>
+        <span class="kom"># i do pracy</span>
+        <span class="cmd">jupyter lab notebooks/interfejs.ipynb</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="pobierz" class="start">
+    <p class="naglowek-sekcji">Pobierz</p>
+    <h2>Od zdjęcia do wydruku w trzy polecenia</h2>
+    <div class="terminal" aria-label="Instalacja i użycie z wiersza poleceń">
+      <span class="cmd">git clone https://github.com/arturskowronski/photo-to-resin</span>
+      <span class="cmd">pip install -e photo-to-resin</span>
+      <span class="cmd">photo-to-resin zdjecie.jpg -o litofan.stl</span>
+    </div>
+    <a class="przycisk" href="https://github.com/arturskowronski/photo-to-resin">Zobacz na GitHubie</a>
+  </section>
+
+  <footer>
+    <span>photo-to-resin · MIT</span>
+    <span>Python · numpy + Pillow · zero zależności od chmury</span>
+  </footer>
+</div>
+
+</body>
+</html>
