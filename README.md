@@ -54,6 +54,16 @@ params = LithophaneParams(width_mm=80, min_thickness_mm=0.6, max_thickness_mm=2.
 photo_to_stl("zdjecie.jpg", "litofan.stl", params)
 ```
 
+## Galeria przykładów
+
+Pięć scen przechodzi cały pipeline end-to-end (zdjęcie → notebook → STL →
+renderingi) w `notebooks/przyklady.ipynb`; wyniki lądują w `site/przyklady/`
+i zasilają sekcję "Przykłady" na stronie:
+
+```bash
+jupyter nbconvert --to notebook --execute --inplace notebooks/przyklady.ipynb
+```
+
 ## Strona
 
 Statyczna strona reklamowa leży w `site/` — grafiki na niej są prawdziwym

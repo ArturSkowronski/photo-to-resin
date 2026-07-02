@@ -154,6 +154,33 @@ section h2 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 700; margin-botto
 .krok p { color: var(--popiol); font-size: 15.5px; }
 .krok b { color: var(--mleko); font-weight: 500; }
 
+/* galeria przykładów — pełne przejścia przez pipeline */
+.legenda {
+  font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--popiol);
+  margin: -24px 0 36px;
+}
+.legenda b { color: var(--zar); font-weight: 400; }
+.galeria { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.karta {
+  border: 1px solid var(--linia); border-radius: 8px; overflow: hidden;
+  background: var(--noc-2); display: flex; flex-direction: column;
+}
+.karta-glowna { display: block; width: 100%; height: auto; }
+.karta-thumbs {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  background: var(--linia); border-top: 1px solid var(--linia);
+}
+.karta-thumbs img { display: block; width: 100%; height: 100%; object-fit: cover; background: var(--noc-2); aspect-ratio: 4 / 3; }
+.karta-tresc { padding: 18px 20px 20px; }
+.karta h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.karta-meta {
+  font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--popiol);
+  margin-bottom: 14px;
+}
+.karta-stl {
+  font-size: 14.5px; font-weight: 500;
+}
+
 /* karta specyfikacji — jak metryczka wydruku */
 .spec { border: 1px solid var(--linia); border-radius: 8px; overflow: hidden; }
 .spec-wiersz {
@@ -204,6 +231,7 @@ footer {
   .hero { grid-template-columns: 1fr; padding: 56px 0 72px; gap: 40px; }
   .plytka { transform: none; }
   .kroki { grid-template-columns: 1fr; }
+  .galeria { grid-template-columns: 1fr; }
   .dwie-kolumny { grid-template-columns: 1fr; gap: 32px; }
   .spec-wiersz { grid-template-columns: 1fr; gap: 4px; }
   nav { gap: 18px; }
@@ -217,6 +245,7 @@ footer {
     <span class="logo">photo-to-resin<span class="kropka">_</span></span>
     <nav aria-label="Nawigacja">
       <a href="#proces">Jak to działa</a>
+      <a href="#przyklady">Przykłady</a>
       <a href="#jupyter">Interfejs</a>
       <a href="#pobierz">Pobierz</a>
     </nav>
@@ -268,6 +297,83 @@ footer {
         <p>Binarny STL z wymiarami w milimetrach ląduje na dysku i idzie <b>prosto do
         Lychee albo Chitubox</b>. Bez konwersji, bez skalowania, bez naprawiania siatki.</p>
       </div>
+    </div>
+  </section>
+
+  <section id="przyklady">
+    <p class="naglowek-sekcji">Przykłady</p>
+    <h2>Pięć zdjęć, pięć litofanów — cały pipeline</h2>
+    <p class="legenda">
+      Wszystko poniżej wygenerował notebook <b>notebooks/przyklady.ipynb</b> jednym „Run All":
+      duży kadr to symulacja podświetlenia, miniatury to <b>zdjęcie wejściowe · płytka bez
+      światła · siatka 3D</b> (wysokość ×5), a STL jest gotowy do slicera.
+    </p>
+    <div class="galeria">
+      <article class="karta">
+        <img class="karta-glowna" src="przyklady/gory-o-swicie-podswietlony.png" alt="Litofan „Góry o świcie” podświetlony od tyłu" loading="lazy">
+        <div class="karta-thumbs">
+          <img src="przyklady/gory-o-swicie-zdjecie.png" alt="Zdjęcie wejściowe: pasma górskie i słońce" loading="lazy">
+          <img src="przyklady/gory-o-swicie-relief.png" alt="Płytka bez podświetlenia" loading="lazy">
+          <img src="przyklady/gory-o-swicie-3d.png" alt="Widok 3D siatki litofanu" loading="lazy">
+        </div>
+        <div class="karta-tresc">
+          <h3>Góry o świcie</h3>
+          <p class="karta-meta">64 × 49 mm · 0.6–2.8 mm · 50 172 trójkątów</p>
+          <a class="karta-stl" href="przyklady/gory-o-swicie-litofan.stl" download>Pobierz STL (2.5 MB)</a>
+        </div>
+      </article>
+      <article class="karta">
+        <img class="karta-glowna" src="przyklady/latarnia-morska-podswietlony.png" alt="Litofan „Latarnia morska” podświetlony od tyłu" loading="lazy">
+        <div class="karta-thumbs">
+          <img src="przyklady/latarnia-morska-zdjecie.png" alt="Zdjęcie wejściowe: latarnia morska ze snopem światła" loading="lazy">
+          <img src="przyklady/latarnia-morska-relief.png" alt="Płytka bez podświetlenia" loading="lazy">
+          <img src="przyklady/latarnia-morska-3d.png" alt="Widok 3D siatki litofanu" loading="lazy">
+        </div>
+        <div class="karta-tresc">
+          <h3>Latarnia morska</h3>
+          <p class="karta-meta">64 × 49 mm · 0.6–2.8 mm · 50 172 trójkątów</p>
+          <a class="karta-stl" href="przyklady/latarnia-morska-litofan.stl" download>Pobierz STL (2.5 MB)</a>
+        </div>
+      </article>
+      <article class="karta">
+        <img class="karta-glowna" src="przyklady/kot-w-oknie-podswietlony.png" alt="Litofan „Kot w oknie” podświetlony od tyłu" loading="lazy">
+        <div class="karta-thumbs">
+          <img src="przyklady/kot-w-oknie-zdjecie.png" alt="Zdjęcie wejściowe: sylwetka kota na tle księżyca" loading="lazy">
+          <img src="przyklady/kot-w-oknie-relief.png" alt="Płytka bez podświetlenia" loading="lazy">
+          <img src="przyklady/kot-w-oknie-3d.png" alt="Widok 3D siatki litofanu" loading="lazy">
+        </div>
+        <div class="karta-tresc">
+          <h3>Kot w oknie</h3>
+          <p class="karta-meta">64 × 49 mm · 0.6–2.8 mm · 50 172 trójkątów</p>
+          <a class="karta-stl" href="przyklady/kot-w-oknie-litofan.stl" download>Pobierz STL (2.5 MB)</a>
+        </div>
+      </article>
+      <article class="karta">
+        <img class="karta-glowna" src="przyklady/zaglowka-o-zachodzie-podswietlony.png" alt="Litofan „Żaglówka o zachodzie” podświetlony od tyłu" loading="lazy">
+        <div class="karta-thumbs">
+          <img src="przyklady/zaglowka-o-zachodzie-zdjecie.png" alt="Zdjęcie wejściowe: żaglówka i zachód słońca nad morzem" loading="lazy">
+          <img src="przyklady/zaglowka-o-zachodzie-relief.png" alt="Płytka bez podświetlenia" loading="lazy">
+          <img src="przyklady/zaglowka-o-zachodzie-3d.png" alt="Widok 3D siatki litofanu" loading="lazy">
+        </div>
+        <div class="karta-tresc">
+          <h3>Żaglówka o zachodzie</h3>
+          <p class="karta-meta">64 × 49 mm · 0.6–2.8 mm · 50 172 trójkątów</p>
+          <a class="karta-stl" href="przyklady/zaglowka-o-zachodzie-litofan.stl" download>Pobierz STL (2.5 MB)</a>
+        </div>
+      </article>
+      <article class="karta">
+        <img class="karta-glowna" src="przyklady/wieczorne-miasto-podswietlony.png" alt="Litofan „Wieczorne miasto” podświetlony od tyłu" loading="lazy">
+        <div class="karta-thumbs">
+          <img src="przyklady/wieczorne-miasto-zdjecie.png" alt="Zdjęcie wejściowe: panorama miasta ze świecącymi oknami" loading="lazy">
+          <img src="przyklady/wieczorne-miasto-relief.png" alt="Płytka bez podświetlenia" loading="lazy">
+          <img src="przyklady/wieczorne-miasto-3d.png" alt="Widok 3D siatki litofanu" loading="lazy">
+        </div>
+        <div class="karta-tresc">
+          <h3>Wieczorne miasto</h3>
+          <p class="karta-meta">64 × 49 mm · 0.6–2.8 mm · 50 172 trójkątów</p>
+          <a class="karta-stl" href="przyklady/wieczorne-miasto-litofan.stl" download>Pobierz STL (2.5 MB)</a>
+        </div>
+      </article>
     </div>
   </section>
 
